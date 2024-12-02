@@ -63,6 +63,12 @@ const loader = new THREE.TextureLoader();
     const orbitGlobeMaterial = new THREE.MeshLambertMaterial({ color: 0xcc4400, side: THREE.DoubleSide  });
 
 
+//MATERIALS ------  Map glbe  --------
+const mapLocationMaterial = new THREE.MeshLambertMaterial({ color: 0x000ff, side: THREE.DoubleSide  });
+
+
+
+
 //MATERIALS ------  CIRCLES--------
     const circleMaterial = new THREE.MeshLambertMaterial({ color: 0xdd8800, transparent: true, opacity: 0.7, side: THREE.DoubleSide  });
 
@@ -77,7 +83,6 @@ const loader = new THREE.TextureLoader();
 });
 */
   
-
   
     const globeMaterial = new THREE.MeshStandardMaterial({ 
     map: loader.load("../assets/textures/earthmap1k.jpg"),
@@ -93,6 +98,8 @@ const loader = new THREE.TextureLoader();
     });
 
 
+//----------------------   OBJECTS   -------------------- 
+
 //Lights
 const pl = new THREE.PointLight(0xffffff, 3000);
 pl.position.set(15, 15, 0);
@@ -106,13 +113,39 @@ scene.add( pl1 );
 
 
 
-// Create the wireframe globe (sphere)
+
+// Create the earth sphere
 const globeRadius = 5;
 const globeGeometry = new THREE.SphereGeometry(globeRadius, 32, 32);
 const globe = new THREE.Mesh(globeGeometry, globeMaterial);
 scene.add(globe);
 
 
+//Points on sphere
+
+const locationGeo = new THREE.SphereGeometry(1, 8, 8);
+const mapLocation = new THREE.Mesh(locationGeo, mapLocationMaterial);
+scene.add(mapLocation);
+
+
+//Create group with globe and sphere
+var globeWithLocations = new THREE.Group();
+scene.add( globeWithLocations );
+globeWithLocations.add(globe);
+globeWithLocations.add(mapLocation);
+
+
+const globeUV = globeGeometry.attributes.uv;
+console.log(globeUV);
+
+/*
+let globeLat = globeUV.v
+let globeY = 
+
+mapLocation.position = 
+*/
+
+//Rotating objects
 
 const globes = [];
 for(let i=0; i<8; i++){
@@ -173,40 +206,43 @@ globes.forEach((item) => {
 centralPivot.add(globe);
 
 
-//console.log(scene.children);
-//console.log(scene.children[2].children[8]);
 
 const sceneGlobe = scene.children[2].children[8];
 
+
+
+
+//----------------------   RENDER LOOP   -------------------- 
+
+
 // Render loop
 function animate() {
-        requestAnimationFrame(animate);
+  requestAnimationFrame(animate);
 
-        // Rotate the wireframe globe
-        globe.rotation.y += -0.004
-      
-        const baseSpeed = 0.003;
-        const orbitSpeed = 0.02;
+  // Rotate the wireframe globe
+  globe.rotation.y += -0.004
 
-        //rrotate all
-        centralPivot.rotation.y += 0.003;
+  const baseSpeed = 0.003;
+  const orbitSpeed = 0.02;
 
-       
-       const rotate = (globeNum, circRotate, orbitRotate) =>{
+  //rrotate all
+  centralPivot.rotation.y += 0.003;
 
-         globes[globeNum].pivot.rotation.z += baseSpeed * circRotate;
-        globes[globeNum].pivot.children[0].rotation.z += orbitSpeed * orbitRotate;
-      }
+  
+  const rotate = (globeNum, circRotate, orbitRotate) =>{
+      globes[globeNum].pivot.rotation.z += baseSpeed * circRotate;
+      globes[globeNum].pivot.children[0].rotation.z += orbitSpeed * orbitRotate;
+    }
 
-      //indvidual rotation speeds for each element in the arrary of globes
-      rotate(0,2,2);
-       rotate(1,2,2);
-       rotate(2,1,4);
-       rotate(3,0.8,2);
-       rotate(4,3,2);
-        rotate(5,0.4,2);
-          rotate(6,1.1,3);
-          rotate(7,1.5,3);
+    //indvidual rotation speeds for each element in the arrary of globes
+  rotate(0,2,2);
+  rotate(1,2,2);
+  rotate(2,1,4);
+  rotate(3,0.8,2);
+  rotate(4,3,2);
+  rotate(5,0.4,2);
+  rotate(6,1.1,3);
+  rotate(7,1.5,3);
 
           
        
