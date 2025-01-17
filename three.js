@@ -4,6 +4,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { GlitchPass } from 'three/addons/postprocessing/GlitchPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+
 
 //https://threejs.org/docs/index.html#manual/en/introduction/Installation
 //terminal run
@@ -26,16 +32,16 @@ const controls = new OrbitControls( camera, renderer.domElement );
 camera.position.set(0,15,0);
 
 controls.enablePan = false;
-controls.minDistance = 10;
-controls.maxDistance = 20;
+controls.minDistance = 12;
+controls.maxDistance = 18;
 
-controls.minAzimuthAngle = Math.PI*0.2;
-controls.maxAzimuthAngle = Math.PI*0.7;
+controls.minAzimuthAngle = Math.PI*-0.75;
+controls.maxAzimuthAngle = Math.PI*0.75;
 
 controls.minPolarAngle = Math.PI*0.4;
-controls.maxPolarAngle = Math.PI*0.7;
+controls.maxPolarAngle = Math.PI*0.6;
 
-controls.dampingFactor = 0.5;
+controls.dampingFactor = 1;
 controls.enableDamping;
 
 controls.update();
@@ -86,13 +92,13 @@ const mapLocationMaterial = new THREE.MeshLambertMaterial({ color: 0x000ff, side
   
     const globeMaterial = new THREE.MeshStandardMaterial({ 
     map: loader.load("../assets/textures/earthmap1k.jpg"),
-    //bumpMap: loader.load("../assets/textures/earthbump1k.jpg"),
-    //bumpScale: 10,
+   // bumpMap: loader.load("../assets/textures/earthbump1k.jpg"),
+   // bumpScale: 4,
    // fog: true,
     //roughness: 0.8,
     // emissiveMap: loader.load("../assets/textures/earthspec1k.jpg"),
     //emissive:0xdd8800,
-   // alphaMap: loader.load("../assets/textures/earthspec1k.jpg"),
+    alphaMap: loader.load("../assets/textures/earthspec1k.jpg"),
    //wireframe: true,
    //wireframeLineWidth: 1,
     });
@@ -106,12 +112,14 @@ pl.position.set(15, 15, 0);
 scene.add( pl );
 
 //Lights
-const pl1 = new THREE.PointLight(0xffffff, 1100);
-pl1.position.set(0, 0, -10);
-scene.add( pl1 );
+//const pl1 = new THREE.PointLight(0xffffff, 1100);
+//pl1.position.set(0, 0, -10);
+//scene.add( pl1 );
 
+//ambient lighting
+const al1 = new THREE.AmbientLight(0xffffff, 0.3);
 
-
+scene.add( al1 )
 
 
 // Create the earth sphere
@@ -162,8 +170,8 @@ for(let i=0; i<8; i++){
 
 
 // Create the circle
-    const circleRadius = 7+i;
-    const circleGeometry = new THREE.RingGeometry(circleRadius, circleRadius + 0.11, 64);
+    const circleRadius = 7+(i*0.5);
+    const circleGeometry = new THREE.RingGeometry(circleRadius, circleRadius + 0.03, 64);
     const circle = new THREE.Mesh(circleGeometry, circleMaterial);
 
     const randomRotate = Math.random (0.3,1);
@@ -219,7 +227,7 @@ const sceneGlobe = scene.children[2].children[8];
 function animate() {
   requestAnimationFrame(animate);
 
-  // Rotate the wireframe globe
+  // Rotate the 'earth'
   globe.rotation.y += -0.004
 
   const baseSpeed = 0.003;
