@@ -8,6 +8,8 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { GlitchPass } from 'three/addons/postprocessing/GlitchPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { BokehPass } from "three/examples/jsm/postprocessing/BokehPass.js";
+
 
 
 
@@ -18,7 +20,8 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 // Set up the scene, camera, and renderer
       const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 100);
       const renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.body.appendChild(renderer.domElement);
@@ -29,22 +32,24 @@ const controls = new OrbitControls( camera, renderer.domElement );
 
 
 
-camera.position.set(0,15,0);
+camera.position.set(10,0,0);
 
 controls.enablePan = false;
-controls.minDistance = 12;
-controls.maxDistance = 18;
+controls.enableZoom = false;
 
-controls.minAzimuthAngle = Math.PI*-0.75;
-controls.maxAzimuthAngle = Math.PI*0.75;
+controls.minDistance = 11;
+controls.maxDistance = 14;
 
-controls.minPolarAngle = Math.PI*0.4;
-controls.maxPolarAngle = Math.PI*0.6;
+//controls.minAzimuthAngle = Math.PI*-1;
+//controls.maxAzimuthAngle = Math.PI*1;
 
-controls.dampingFactor = 1;
+//controls.minPolarAngle = Math.PI*-0.01;
+controls.maxPolarAngle = Math.PI*2;
 controls.enableDamping;
 
-controls.update();
+controls.dampingFactor = 45;
+
+
 
 
 //raycaster
@@ -53,58 +58,85 @@ const pointer = new THREE.Vector2();
 
 
 function onPointerMove( event ) {
-
 	// calculate pointer position in normalized device coordinates
 	// (-1 to +1) for both components
-
 	pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 	pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 
 }
 
+
+//COLOR VARIABLES -------------
+const grey_1 = new THREE.Color( 0x16151E );
+//const grey_2 = new THREE.Color( 0x686677 );
+const grey_3 = new THREE.Color( 0x55545E );
+const grey_4 = new THREE.Color( 0x7A7887 );
+//const gray_5 = new THREE.Color( 0x595959 );
+
+const orange_1 = new THREE.Color( 0xCC4400 );
+const orange_2 = new THREE.Color( 0xDD8800 );
+
+
+
+//MATERIAL -----BACKGROUND ----
+scene.background = grey_1;
+
 const loader = new THREE.TextureLoader();
 //MATERIALS ------  ORBIT GLOBE--------
     const orbitGlobeRadius = 0.2; // Radius of the smaller orbiting globes
-    //const orbitGlobeMaterial = new THREE.MeshBasicMaterial({ color: 0xdd8800, transparent: true, opacity: 0.4, side: THREE.DoubleSide  });
-    const orbitGlobeMaterial = new THREE.MeshLambertMaterial({ color: 0xcc4400, side: THREE.DoubleSide  });
+    //const orbitGlobeMaterial = new THREE.MeshBasicMaterial({ color: orange_2, transparent: true, opacity: 0.4, side: THREE.DoubleSide  });
+    const orbitGlobeMaterial = new THREE.MeshLambertMaterial({ color: orange_1, side: THREE.DoubleSide  });
 
 
 //MATERIALS ------  Map glbe  --------
-const mapLocationMaterial = new THREE.MeshLambertMaterial({ color: 0x000ff, side: THREE.DoubleSide  });
+const mapLocationMaterial = new THREE.MeshLambertMaterial({ color: orange_1, side: THREE.DoubleSide  });
 
 
 
 
 //MATERIALS ------  CIRCLES--------
-    const circleMaterial = new THREE.MeshLambertMaterial({ color: 0xdd8800, transparent: true, opacity: 0.7, side: THREE.DoubleSide  });
+    const circleMaterial = new THREE.MeshLambertMaterial({ color: orange_2, transparent: true, opacity: 0.7, side: THREE.DoubleSide  });
 
-    //const circleMaterial = new THREE.MeshBasicMaterial({ color: 0xdd8800, transparent: true, opacity: 0.2, side: THREE.DoubleSide });
+    //const circleMaterial = new THREE.MeshBasicMaterial({ color: orange_2, transparent: true, opacity: 0.2, side: THREE.DoubleSide });
 
 //MATERIALS ------ CIRCLES--------
 
 /*
   // const globeMaterial = new THREE.MeshBasicMaterial({ 
-  color: 0xdd8800, 
+  color: orange_2, 
   wireframe: true,
 });
 */
   
   
     const globeMaterial = new THREE.MeshStandardMaterial({ 
-    map: loader.load("../assets/textures/earthmap1k.jpg"),
-   // bumpMap: loader.load("../assets/textures/earthbump1k.jpg"),
-   // bumpScale: 4,
-   // fog: true,
-    //roughness: 0.8,
-    // emissiveMap: loader.load("../assets/textures/earthspec1k.jpg"),
-    //emissive:0xdd8800,
-    alphaMap: loader.load("../assets/textures/earthspec1k.jpg"),
-   //wireframe: true,
-   //wireframeLineWidth: 1,
+      //map: loader.load("../assets/textures/earthmap1k.jpg"),
+     bumpMap: loader.load("../assets/textures/earthbump1k.jpg"),
+     bumpScale: 4,
+     fog: true,
+      //roughness: 0.8,
+      // emissiveMap: loader.load("../assets/textures/earthspec1k.jpg"),
+      //emissive:orange_2,
+      alphaMap: loader.load("../assets/textures/earthalpha1k.jpg"),
+      transparent: true,
+    //opacity: 0.9,
+    side:THREE.DoubleSide,
+    color:  grey_3,
+
     });
 
+    //this material is used to create a wireframe sphere
+    const globeMaterial2 = new THREE.MeshStandardMaterial({ 
+      //map: loader.load("../assets/textures/earthmap1k.jpg"),
+    color:  grey_4,
+    wireframe: true,
+    wireframeLineWidth: 0.01,
+    transparent: true,
+    opacity: 0.4,
+    side:THREE.DoubleSide,
+    });
 
-//----------------------   OBJECTS   -------------------- 
+//----------------------   OBJECTS: LIGHTS  -------------------- 
 
 //Lights
 const pl = new THREE.PointLight(0xffffff, 3000);
@@ -117,26 +149,34 @@ scene.add( pl );
 //scene.add( pl1 );
 
 //ambient lighting
-const al1 = new THREE.AmbientLight(0xffffff, 0.3);
-
+const al1 = new THREE.AmbientLight(0xffffff, 3);
 scene.add( al1 )
 
 
+//----------------------   OBJECTS: MESHES  --------------------
+
 // Create the earth sphere
 const globeRadius = 5;
+const globeRadius2 = 5.1;
+
 const globeGeometry = new THREE.SphereGeometry(globeRadius, 32, 32);
+const globeGeometry2 = new THREE.SphereGeometry(globeRadius2, 24, 16);
+
 const globe = new THREE.Mesh(globeGeometry, globeMaterial);
+const globe_2_wireframe = new THREE.Mesh(globeGeometry2, globeMaterial2);
+
 scene.add(globe);
+scene.add(globe_2_wireframe);
 
 
-//Points on sphere
 
-const locationGeo = new THREE.SphereGeometry(1, 8, 8);
+//Partner locations on sphere
+const locationGeo = new THREE.SphereGeometry(0.3, 8, 8);
 const mapLocation = new THREE.Mesh(locationGeo, mapLocationMaterial);
 scene.add(mapLocation);
 
 
-//Create group with globe and sphere
+//Create group with main earth globe and sphere
 var globeWithLocations = new THREE.Group();
 scene.add( globeWithLocations );
 globeWithLocations.add(globe);
@@ -146,12 +186,7 @@ globeWithLocations.add(mapLocation);
 const globeUV = globeGeometry.attributes.uv;
 console.log(globeUV);
 
-/*
-let globeLat = globeUV.v
-let globeY = 
 
-mapLocation.position = 
-*/
 
 //Rotating objects
 
@@ -163,7 +198,7 @@ for(let i=0; i<8; i++){
       scene.add( pivot );
 
  // Create the orbiting globe
-    const orbitGlobeGeometry = new THREE.SphereGeometry(orbitGlobeRadius, 16, 16);
+    const orbitGlobeGeometry = new THREE.SphereGeometry(orbitGlobeRadius, 8, 8);
     const orbitGlobe1 = new THREE.Mesh(orbitGlobeGeometry, orbitGlobeMaterial);
     orbitGlobe1.position.set(0, 0, 0);
     scene.add(orbitGlobe1);
@@ -184,6 +219,7 @@ for(let i=0; i<8; i++){
 //Add mesh to pivot group and offset position
 pivot.add( orbitGlobe1 );
 orbitGlobe1.position.set( 7+i,0, 0 ); 
+
 
 //Add mesh to pivot group and offset position
 pivot.add( circle );
@@ -210,13 +246,28 @@ globes.forEach((item) => {
 }
 )
     
-   
+  
 centralPivot.add(globe);
-
-
+centralPivot.add(globe_2_wireframe);
 
 const sceneGlobe = scene.children[2].children[8];
 
+
+
+
+// Post-processing setup
+const composer = new EffectComposer(renderer);
+// Reduce resolution to half
+composer.setSize(window.innerWidth / 2, window.innerHeight / 2); 
+
+composer.addPass(new RenderPass(scene, camera));
+
+const bokehPass = new BokehPass(scene, camera, {
+    focus: 6,  // Distance to the focused object
+    aperture: 0.01, // Blur strength (smaller = stronger blur)
+    maxblur: 0.005 // Maximum blur size
+});
+composer.addPass(bokehPass);
 
 
 
@@ -229,11 +280,12 @@ function animate() {
 
   // Rotate the 'earth'
   globe.rotation.y += -0.004
+  globe_2_wireframe.rotation.y += -0.004
 
   const baseSpeed = 0.003;
   const orbitSpeed = 0.02;
 
-  //rrotate all
+  //rotate all
   centralPivot.rotation.y += 0.003;
 
   
@@ -269,25 +321,22 @@ raycaster.setFromCamera( pointer, camera );
 
 
 // calculate objects intersecting the picking ray
-
 const intersects = raycaster.intersectObjects( scene.children );
 
-
 for ( let i = 0; i < intersects.length; i ++ ) {
-
-
-  intersects[ i ].object.material.color.set( 0xff0000 );
-
+  //intersects[ i ].object.material.color.set( 0xff0000 );
 }
 
-        
-    controls.update();
+      
+
+
+controls.update();
 
     // Render the scene
     renderer.render(scene, camera);
+    //composer.render();
+
 }
-
-
 
 animate();
 
