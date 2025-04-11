@@ -1,6 +1,8 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DObject, CSS2DRenderer } from 'three/examples/jsm/Addons.js';
+
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 
@@ -312,12 +314,35 @@ const bokehPass = new BokehPass(scene, camera, {
 composer.addPass(bokehPass);
 
 
+
+
+
+
+
 //----------------------  Raycaster   -------------------
 
-//------------RAYCASTER--------
-
-//raycaster
+const pointer = new THREE.Vector2();
 const raycaster = new THREE.Raycaster();
+const clickActive = false;
+
+const mousePosition = (event) => {
+  pointer.x = (event.clientX / window.innerWidth)*2 -1
+  pointer.y = -(event.clientY / window.innerHeight)*2 +1
+
+  raycaster.setFromCamera(pointer, camera);
+
+
+    const intersects = raycaster.intersectObjects(partners);
+
+    if(intersects.length > 0){
+      console.log(intersects[1]);
+      intersects[1].object.material.color.set('#00ff00')
+    }
+
+}
+
+window.addEventListener('click', mousePosition);
+
 
 
 
@@ -392,35 +417,6 @@ for(const location of partners){
 }
 
 
-//----------Cursor
-const pointer = new THREE.Vector2();
-window.addEventListener('mousemove', (event) => 
-  {
-     pointer.x = (event.clientX / window.innerWidth *2)-1;
-     pointer.y = (event.clientY / window.innerHeight*2 -1)*-1;
-
-     console.log(pointer.x);
-
-  })
-
-
-//---------------RAYCASTER
-raycaster.setFromCamera(pointer, camera);
-
-window.addEventListener("click", () => {
-
-  
-  for(const item of partners){
-    const rayIntersect = raycaster.intersectObject(item);
-  
-      //console.log(item);
-      if(rayIntersect){
-      item.children[0].material.color.set('#00ffff')
-      }
-  }
-  
-});
-
 
 
 
@@ -429,6 +425,8 @@ controls.update();
     // Render the scene
     renderer.render(scene, camera);
     //composer.render();
+
+
 
 }
 animate();
@@ -440,4 +438,5 @@ window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+
 });
