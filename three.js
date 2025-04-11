@@ -48,19 +48,9 @@ controls.dampingFactor = 45;
 
 
 
-//raycaster
-const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2();
 
 
-function onPointerMove( event ) {
-	// calculate pointer position in normalized device coordinates
-	// (-1 to +1) for both components
-	pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-	pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 
-
-}
 
 
 //COLOR VARIABLES -------------
@@ -179,8 +169,11 @@ scene.add(globe_2_wireframe);
 
 
 //Create spheres for partner locations 
-const locationGeo = new THREE.SphereGeometry(0.1, 8, 8);
-const locationGeoInteraction = new THREE.SphereGeometry(0.3, 8, 8);
+let radius_locationGeoInteraction = 0.3;
+let radius_locationGeo= 0.1;
+
+const locationGeo = new THREE.SphereGeometry(radius_locationGeo, 8, 8);
+const locationGeoInteraction = new THREE.SphereGeometry(radius_locationGeoInteraction, 8, 8);
 
 
 const partners = [];
@@ -201,20 +194,20 @@ const partnerLatLong = (partnerNum,lat,long) =>{
 
 //create all the partners and add to an array
 for(let i=0; i<=6; i++){
-  const partnerLocation = new THREE.Mesh(locationGeo, mapLocationMaterial);
-  const partnerLocationInteraction = new THREE.Mesh(locationGeoInteraction, mapLocationInteractionMaterial);
+  const locationBase = new THREE.Mesh(locationGeo, mapLocationMaterial);
+  const locationBaseInteraction = new THREE.Mesh(locationGeoInteraction, mapLocationInteractionMaterial);
 
-  scene.add(partnerLocation);
-  scene.add(partnerLocationInteraction);
+  scene.add(locationBase);
+  scene.add(locationBaseInteraction);
   
-  var locationGroup = new THREE.Group();
-  scene.add( locationGroup);
-  locationGroup.add(partnerLocation);
-  locationGroup.add(partnerLocationInteraction);
+  var locationOffice = new THREE.Group();
+  scene.add( locationOffice);
+  locationOffice.add(locationBase);
+  locationOffice.add(locationBaseInteraction);
 
 
-  //add partnerlocation to partners array
-  partners.push(locationGroup);
+  //add locationBase to partners array
+  partners.push(locationOffice);
 }
 
 //add a unique location for each partner
@@ -246,7 +239,7 @@ for(let i=0; i<8; i++){
       scene.add( pivot );
 
  //Create the orbiting globes
-  const orbitGlobeRadius = 0.1; // Radius of the smaller orbiting globes
+  const orbitGlobeRadius = 0.05; // Radius of the smaller orbiting globes
 
     const orbitGlobeGeometry = new THREE.SphereGeometry(orbitGlobeRadius, 8, 8);
     const orbitGlobe1 = new THREE.Mesh(orbitGlobeGeometry, orbitGlobeMaterial);
@@ -254,7 +247,7 @@ for(let i=0; i<8; i++){
     scene.add(orbitGlobe1);
 
 //base radius for orbiting
-const baseOrbitRadius = 5+(i*0.35)   
+const baseOrbitRadius = 5+(i*0.30)   
 
 // Create the circle
     
@@ -296,7 +289,7 @@ globes.forEach((item) => {
   
 //centralPivot.add(globe);
 //centralPivot.add(globe_2_wireframe);
-////centralPivot.add(partnerLocation);
+////centralPivot.add(locationBase);
 centralPivot.add(globeWithLocations)
 
 const sceneGlobe = scene.children[2].children[8];
@@ -319,10 +312,19 @@ const bokehPass = new BokehPass(scene, camera, {
 composer.addPass(bokehPass);
 
 
+//----------------------  Raycaster   -------------------
+
+//------------RAYCASTER--------
+
+//raycaster
+const raycaster = new THREE.Raycaster();
+
+
+
 
 //----------------------   RENDER LOOP   -------------------- 
 
-
+let time = 0;
 // Render loop
 function animate() {
   requestAnimationFrame(animate);
@@ -331,7 +333,6 @@ function animate() {
   const earthRotate = -0.007;
   globeWithLocations.rotation.y += earthRotate;
   
-
   
   const baseCircleSpeed = 0.00220;
   const baseOrbitSpeed = 0.02;
@@ -358,28 +359,69 @@ function animate() {
 
           
        
-/*
-        globes[0].pivot.rotation.z += baseSpeed * 2;
-        globes[0].pivot.children[0].rotation.z += baseSpeed * 2;
 
-*/
+//"pulse" or scaling of globes
 
 
 
+const scaling = (item) =>{
+  const amplitude = 1;    
+  const frequency = 0.002;
+  const scalingFactor = 0.3;
+  const minSize = 1.2;
+  // square to always make positive
+  // add scaling factor to reduce size of sine wave
+  //minSize to set a floor
+  let sin = ((Math.sin(time) * amplitude)**2) * scalingFactor + minSize;
 
-//------------RAYCASTER--------
-// update the picking ray with the camera and pointer position
-raycaster.setFromCamera( pointer, camera );
+  item.scale.x = sin;
+  item.scale.y = sin;
+  item.scale.z = sin;
 
-
-// calculate objects intersecting the picking ray
-const intersects = raycaster.intersectObjects( scene.children );
-
-for ( let i = 0; i < intersects.length; i ++ ) {
-  //intersects[ i ].object.material.color.set( 0xff0000 );
+  time += frequency;
+  //console.log( item.scale.x);
 }
 
-      
+
+// pulse_scaling();
+for(const location of partners){
+  //only scale the outer 'shell' object
+  let child =location.children[1];
+  scaling(child);
+
+}
+
+
+//----------Cursor
+const pointer = new THREE.Vector2();
+window.addEventListener('mousemove', (event) => 
+  {
+     pointer.x = (event.clientX / window.innerWidth *2)-1;
+     pointer.y = (event.clientY / window.innerHeight*2 -1)*-1;
+
+     console.log(pointer.x);
+
+  })
+
+
+//---------------RAYCASTER
+raycaster.setFromCamera(pointer, camera);
+
+window.addEventListener("click", () => {
+
+  
+  for(const item of partners){
+    const rayIntersect = raycaster.intersectObject(item);
+  
+      //console.log(item);
+      if(rayIntersect){
+      item.children[0].material.color.set('#00ffff')
+      }
+  }
+  
+});
+
+
 
 
 controls.update();
@@ -389,7 +431,6 @@ controls.update();
     //composer.render();
 
 }
-
 animate();
 
 
