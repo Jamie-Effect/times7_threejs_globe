@@ -77,7 +77,18 @@ scene.fog = new THREE.Fog(fog, 3, 12);
 const loader = new THREE.TextureLoader();
 //MATERIALS ------  ORBIT GLOBE--------
     //const orbitGlobeMaterial = new THREE.MeshBasicMaterial({ color: orange_2, transparent: true, opacity: 0.4, side: THREE.DoubleSide  });
-    const orbitGlobeMaterial = new THREE.MeshLambertMaterial({ color: orange_1, side: THREE.DoubleSide  });
+    // const orbitGlobeMaterial = new THREE.MeshLambertMaterial({ 
+    //   color: orange_1, 
+    //   opacity: 0.1,
+    //   side: THREE.DoubleSide  });
+
+
+      const orbitGlobeMaterial = new THREE.MeshStandardMaterial({ 
+        color: orange_1, 
+        transparent: true,  
+        opacity:0.6,
+        fog: true,
+      });
 
 
 //MATERIALS ------  Map glbe  --------
@@ -139,7 +150,7 @@ side: THREE.DoubleSide
 //----------------------   OBJECTS: LIGHTS  -------------------- 
 
 //Lights
-const pl = new THREE.PointLight(0xffffff, 900);
+const pl = new THREE.PointLight(0xffffff, 1100);
 pl.position.set(15, 6, 0);
 scene.add( pl );
 
@@ -149,7 +160,7 @@ pl1.position.set(-15, 6, 0);
 scene.add( pl1 );
 
 //ambient lighting
-const al1 = new THREE.AmbientLight(0xffffff, 2);
+const al1 = new THREE.AmbientLight(0xffffff, 3);
 scene.add( al1 )
 
 
